@@ -1,0 +1,68 @@
+/* Calm, book-first presentation. Content remains ordinary Quarto Markdown. */
+:root {
+  --ee-ink: #252827;
+  --ee-muted: #68706b;
+  --ee-rule: #d9ded9;
+  --ee-accent: #315f4b;
+  --ee-paper: #fdfdfb;
+}
+
+body {
+  background: var(--ee-paper);
+  color: var(--ee-ink);
+  font-family: "Noto Serif CJK SC", "Source Han Serif SC", "Songti SC", SimSun, Georgia, serif;
+  font-size: 1.03rem;
+  line-height: 1.9;
+}
+
+#quarto-content, .page-columns .content {
+  max-width: 52rem;
+}
+
+#quarto-sidebar {
+  background: #fafbf8;
+  border-right: 1px solid var(--ee-rule);
+  font-family: "Noto Sans CJK SC", "Microsoft YaHei", Arial, sans-serif;
+}
+
+#quarto-sidebar .sidebar-title, #quarto-sidebar .sidebar-item-text {
+  color: var(--ee-ink);
+}
+
+#quarto-sidebar .sidebar-item-container .active {
+  color: var(--ee-accent);
+  font-weight: 700;
+}
+
+h1, h2, h3, h4 {
+  color: #1f3329;
+  font-family: "Noto Serif CJK SC", "Source Han Serif SC", "Songti SC", SimSun, Georgia, serif;
+  font-weight: 600;
+  letter-spacing: 0.015em;
+}
+
+h1 { margin-top: 1.25rem; font-size: 2.15rem; }
+h2 { margin-top: 2.6rem; padding-bottom: .35rem; border-bottom: 1px solid var(--ee-rule); font-size: 1.48rem; }
+h3 { margin-top: 1.9rem; font-size: 1.2rem; }
+
+p { margin-bottom: 1.15rem; }
+a { color: var(--ee-accent); text-decoration-thickness: 1px; text-underline-offset: 0.16em; }
+blockquote { border-left: 3px solid #92aa9b; color: #445148; padding: .2rem 1.2rem; }
+
+.book-title-page {
+  max-width: 42rem;
+  margin: 10vh auto 4rem;
+  text-align: center;
+}
+.book-title-page h1 { border: 0; font-size: clamp(2.7rem, 8vw, 4.4rem); margin-bottom: .4rem; }
+.book-title-page h2 { border: 0; margin-top: 0; padding: 0; color: var(--ee-muted); font-size: 1.15rem; letter-spacing: .12em; }
+.book-title-page p { margin: 1.4rem auto; max-width: 38rem; text-align: left; }
+.book-title-page .btn { margin: 1.25rem 0 1.75rem; font-family: "Noto Sans CJK SC", "Microsoft YaHei", Arial, sans-serif; }
+
+.quarto-title-meta, .quarto-title-meta-contents { color: var(--ee-muted); font-family: "Noto Sans CJK SC", "Microsoft YaHei", Arial, sans-serif; }
+
+@media (max-width: 991.98px) {
+  body { font-size: 1rem; }
+  .book-title-page { margin-top: 3rem; }
+  h1 { font-size: 1.85rem; }
+}
