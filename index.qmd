@@ -13,7 +13,7 @@ date-format: "YYYY年M月D日"
 
 这本书会持续更新。较成熟的判断与尚在形成中的问题可以并列存在；它更像一份个人经济学思想档案，而非一套完成的教材。
 
-[开始阅读](preface.qmd){.btn .btn-primary}
+[开始阅读](preface.md){.btn .btn-primary}
 
 作者：作者姓名（待填写）  
 当前版本：0.1.0  
