@@ -1,82 +1,67 @@
-# 《经济学随笔》 / Economic Essays
+# 十大经典排序算法
 
-这是一个用 Quarto Book 制作的中文在线经济学随笔集。每篇文章都是独立的 `.qmd` 文件；书籍目录、搜索、侧边栏目录和“上一章 / 下一章”导航由 Quarto 自动生成。无需编辑 HTML 或 JavaScript。
+[![Build Status](https://travis-ci.org/hustcc/JS-Sorting-Algorithm.svg?branch=master)](https://travis-ci.org/hustcc/JS-Sorting-Algorithm)
 
-## 文件结构
+排序算法是《数据结构与算法》中最基本的算法之一。
 
-```text
-economic-essays/
-├── _quarto.yml                 # 书名、目录（parts / chapters）与输出设置
-├── index.qmd                   # 扉页式首页
-├── preface.qmd                 # 序言
-├── essays/                     # 每篇随笔一个文件
-├── references.bib              # 文献引用库
-├── styles.css                  # 全书视觉样式
-└── .github/workflows/publish.yml # GitHub Pages 自动部署
-```
+排序算法可以分为内部排序和外部排序，内部排序是数据记录在内存中进行排序，而外部排序是因排序的数据很大，一次不能容纳全部的排序记录，在排序过程中需要访问外存。常见的内部排序算法有：**插入排序、希尔排序、选择排序、冒泡排序、归并排序、快速排序、堆排序、基数排序**等。用一张图概括：
 
-## 新增一篇文章
+![十大经典排序算法 概览截图](res/sort.png)
 
-1. 新建 `essays/06-new-essay.qmd`，并使用与现有文章相同的 YAML 元数据。
-2. 用普通 Markdown / Quarto Markdown 写作。
-3. 在 `_quarto.yml` 相应 `chapters:` 列表中加入：
 
-   ```yaml
-   - essays/06-new-essay.qmd
-   ```
+**关于时间复杂度**：
 
-4. 本地运行 `quarto preview` 检查效果。
+1. 平方阶 (O(n2)) 排序
+	各类简单排序：直接插入、直接选择和冒泡排序。
+2. 线性对数阶 (O(nlog2n)) 排序
+	快速排序、堆排序和归并排序；
+3. O(n1+§)) 排序，§ 是介于 0 和 1 之间的常数。
+    希尔排序
+4. 线性阶 (O(n)) 排序
+	基数排序，此外还有桶、箱排序。
 
-## 删除文章
 
-从 `_quarto.yml` 的目录配置中删除该文件所在行即可。源文件可以保留，便于日后恢复；确认不再需要时再手动删除文件。
+**关于稳定性**：
 
-## 调整文章顺序
+稳定的排序算法：冒泡排序、插入排序、归并排序和基数排序。
 
-直接调整 `_quarto.yml` 中同一辑下 `chapters:` 的顺序。Quarto 会据此更新左侧目录与前后章导航。
+不是稳定的排序算法：选择排序、快速排序、希尔排序、堆排序。
 
-## 新增一辑（Part）
 
-在 `book.chapters` 中增加一段：
+**名词解释**：
 
-```yaml
-- part: "第四辑：新主题"
-  chapters:
-    - essays/06-new-essay.qmd
-```
+**n**：数据规模
 
-## 本地预览与生成网站
+**k**：“桶”的个数
 
-先安装 [Quarto](https://quarto.org/docs/get-started/)。在项目根目录运行：
+**In-place**：占用常数内存，不占用额外内存
 
-```powershell
-quarto preview
-```
+**Out-place**：占用额外内存
 
-Quarto 会启动本地服务器，并在终端显示预览地址（通常为 `http://localhost:4200/`）。保存 `.qmd` 或 `styles.css` 后，浏览器会自动刷新。
+**稳定性**：排序后 2 个相等键值的顺序和排序之前它们的顺序相同
 
-要生成静态网站文件，运行：
+----
 
-```powershell
-quarto render
-```
 
-生成结果位于 `_book/`；该目录是构建产物，不需要作为主要源代码维护。
+**GitBook 内容大纲**
 
-同一份源文件也可尝试生成其他格式：
+1. [冒泡排序](1.bubbleSort.md)
+2. [选择排序](2.selectionSort.md)
+3. [插入排序](3.insertionSort.md)
+4. [希尔排序](4.shellSort.md)
+5. [归并排序](5.mergeSort.md)
+6. [快速排序](6.quickSort.md)
+7. [堆排序](7.heapSort.md)
+8. [计数排序](8.countingSort.md)
+9. [桶排序](9.bucketSort.md)
+10. [基数排序](10.radixSort.md)
 
-```powershell
-quarto render --to pdf
-quarto render --to epub
-```
+----
 
-PDF 输出通常还需要本机可用的 LaTeX 环境。
+本书内容几乎完全来源于网络。
 
-## 发布到 GitHub Pages
+开源项目地址：[https://github.com/hustcc/JS-Sorting-Algorithm](https://github.com/hustcc/JS-Sorting-Algorithm)，整理人 [hustcc](https://github.com/hustcc)。
 
-1. 在 GitHub 创建一个新仓库（建议名为 `economic-essays`），并将本项目推送到仓库的 `main` 分支。
-2. 在仓库 **Settings → Pages** 中，将 **Source** 选为 **GitHub Actions**。
-3. 推送后，`.github/workflows/publish.yml` 会自动渲染并部署 `_book/`。
-4. 在仓库的 **Actions** 页面等待工作流完成；部署地址会显示在运行结果中。
+GitBook 在线阅读地址：[https://sort.hust.cc/](https://sort.hust.cc/)。
 
-工作流不需要手工上传 HTML 文件，也不会把 `_book/` 当作需要维护的源代码。
+本项目使用 [lint-md](https://github.com/hustcc/lint-md) 进行中文 Markdown 文件的格式检查，务必在提交 Pr 之前，保证 Markdown 格式正确。
