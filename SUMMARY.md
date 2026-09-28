@@ -10,3 +10,4 @@
 8. [计数排序](8.countingSort.md)
 9. [桶排序](9.bucketSort.md)
 10. [基数排序](10.radixSort.md)
+11. [泡沫经济](11.bubbleEcon.md)
