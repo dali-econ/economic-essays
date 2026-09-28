@@ -1,0 +1,158 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      name="description"
+      content="排序算法与经济学随笔"
+    />
+    <title>经济学随笔</title>
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/docsify@4.13.1/lib/themes/vue.css"
+    />
+    <style>
+      :root {
+        --toc-width: 14rem;
+      }
+
+      .sidebar-nav > ul,
+      .sidebar-nav > ol {
+        margin-top: 0.75rem;
+      }
+
+      .sidebar-nav li {
+        margin: 0.3rem 0;
+      }
+
+      .page-toc {
+        box-sizing: border-box;
+        position: fixed;
+        top: 4.5rem;
+        right: 1.5rem;
+        z-index: 10;
+        width: var(--toc-width);
+        max-height: calc(100vh - 6rem);
+        overflow-y: auto;
+        border-left: 1px solid #e5e7eb;
+        padding: 0.25rem 0 0.25rem 1rem;
+        color: #6b7280;
+        font-size: 0.875rem;
+        line-height: 1.45;
+      }
+
+      .page-toc__title {
+        margin: 0 0 0.65rem;
+        color: #374151;
+        font-weight: 600;
+      }
+
+      .page-toc ol {
+        margin: 0;
+        padding: 0;
+        list-style: none;
+      }
+
+      .page-toc li + li {
+        margin-top: 0.45rem;
+      }
+
+      .page-toc .toc-level-3 {
+        padding-left: 0.8rem;
+      }
+
+      .page-toc .toc-level-4 {
+        padding-left: 1.6rem;
+      }
+
+      .page-toc a {
+        color: inherit;
+        text-decoration: none;
+      }
+
+      .page-toc a:hover,
+      .page-toc a:focus {
+        color: #42b983;
+        text-decoration: underline;
+      }
+
+      @media screen and (min-width: 1300px) {
+        .content {
+          right: calc(var(--toc-width) + 3.5rem);
+        }
+
+        .markdown-section {
+          max-width: 58rem;
+        }
+      }
+
+      @media screen and (max-width: 1299px) {
+        .page-toc {
+          display: none;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div id="app">正在载入内容…</div>
+    <aside class="page-toc" aria-label="本页目录" hidden></aside>
+
+    <script>
+      const toc = document.querySelector(".page-toc");
+
+      function escapeHtml(value) {
+        return value.replace(/[&<>'"]/g, (character) => ({
+          "&": "&amp;",
+          "<": "&lt;",
+          ">": "&gt;",
+          "'": "&#39;",
+          '"': "&quot;",
+        })[character]);
+      }
+
+      function renderPageToc(html) {
+        const documentFragment = new DOMParser().parseFromString(html, "text/html");
+        const headings = Array.from(
+          documentFragment.querySelectorAll("h2[id], h3[id], h4[id]")
+        );
+
+        if (headings.length === 0) {
+          toc.hidden = true;
+          toc.replaceChildren();
+          return;
+        }
+
+        const route = window.location.hash.split("?")[0] || "#/";
+        const items = headings.map((heading) => {
+          const id = encodeURIComponent(heading.id);
+          const text = escapeHtml(heading.textContent.trim());
+          const level = heading.tagName.slice(1);
+          return `<li class="toc-level-${level}"><a href="${route}?id=${id}">${text}</a></li>`;
+        });
+
+        toc.innerHTML = `<p class="page-toc__title">本页目录</p><ol>${items.join("")}</ol>`;
+        toc.hidden = false;
+      }
+
+      window.$docsify = {
+        name: "经济学随笔",
+        repo: "https://github.com/dali-econ/economic-essays",
+        loadSidebar: "SUMMARY.md",
+        subMaxLevel: 0,
+        auto2top: true,
+        relativePath: true,
+        notFoundPage: true,
+        plugins: [
+          (hook) => {
+            hook.afterEach((html, next) => {
+              next(html);
+              window.requestAnimationFrame(() => renderPageToc(html));
+            });
+          },
+        ],
+      };
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/docsify@4.13.1/lib/docsify.min.js"></script>
+  </body>
+</html>
