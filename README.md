@@ -60,8 +60,10 @@
 
 本书内容几乎完全来源于网络。
 
-开源项目地址：[https://github.com/hustcc/JS-Sorting-Algorithm](https://github.com/hustcc/JS-Sorting-Algorithm)，整理人 [hustcc](https://github.com/hustcc)。
+开源项目地址：[https://github.com/dali-econ/economic-essays](https://github.com/dali-econ/economic-essays)，整理人 [dali-econ](https://github.com/dali-econ)。
 
+<!--
 GitBook 在线阅读地址：[https://sort.hust.cc/](https://sort.hust.cc/)。
 
 本项目使用 [lint-md](https://github.com/hustcc/lint-md) 进行中文 Markdown 文件的格式检查，务必在提交 Pr 之前，保证 Markdown 格式正确。
+-->
