@@ -62,6 +62,8 @@
 
 开源项目地址：[https://github.com/dali-econ/economic-essays](https://github.com/dali-econ/economic-essays)，整理人 [dali-econ](https://github.com/dali-econ)。
 
+GitBook 在线阅读地址：[https://dali-econ.github.io/economic-essays/](https:dali-econ.github.io/economic-essays/)。
+
 <!--
 GitBook 在线阅读地址：[https://sort.hust.cc/](https://sort.hust.cc/)。
 
