@@ -63,8 +63,11 @@
 开源项目地址：[https://github.com/dali-econ/economic-essays](https://github.com/dali-econ/economic-essays)，整理人 [dali-econ](https://github.com/dali-econ)。
 
 本项目使用 [lint-md](https://github.com/dali-econ/lint-md) 进行中文 Markdown 文件的格式检查，务必在提交 Pr 之前，保证 Markdown 格式正确。
+
+在线阅读地址：https://dali-econ.github.io/economic-essays/
+ 
 <!--
-GitBook 在线阅读地址：[https://dali-econ.github.io/economic-essays/](https:dali-econ.github.io/economic-essays/)。
+GitBook 在线阅读地址：[dali-econ.github.io/economic-essays/](dali-econ.github.io/economic-essays/)。
 -->
 
 <!--
