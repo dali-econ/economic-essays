@@ -77,6 +77,49 @@
         text-decoration: underline;
       }
 
+      /* 正文中的注释/参考文献引用上标 */
+      .fn-ref {
+        font-size: 0.8em;
+        line-height: 0;
+      }
+
+      .fn-ref a {
+        color: #42b983;
+        text-decoration: none;
+      }
+
+      .fn-ref a:hover,
+      .fn-ref a:focus {
+        text-decoration: underline;
+      }
+
+      /* 文献列表项的锚点（不占位，仅供跳转） */
+      .fn-anchor {
+        display: inline-block;
+        width: 0;
+      }
+
+      /* 从文献列表返回正文引用处 */
+      .fn-back {
+        margin-left: 0.35rem;
+        color: #9ca3af;
+        font-size: 0.85em;
+        text-decoration: none;
+      }
+
+      .fn-back:hover,
+      .fn-back:focus {
+        color: #42b983;
+      }
+
+      /* 长公式在窄屏可横向滚动，不撑破版心 */
+      mjx-container[display="true"] {
+        overflow-x: auto;
+        overflow-y: hidden;
+        max-width: 100%;
+        padding-bottom: 0.15rem;
+      }
+
       @media screen and (min-width: 1300px) {
         .content {
           right: calc(var(--toc-width) + 3.5rem);
@@ -93,6 +136,45 @@
         }
       }
     </style>
+    <script>
+      // MathJax 3 配置。必须在 mathjax 脚本执行之前定义，因此放在 <head> 里。
+      window.MathJax = {
+        startup: {
+          // 不在脚本加载完成时自动排版整页，排版时机由下方 docsify 钩子驱动。
+          typeset: false,
+        },
+        tex: {
+          inlineMath: [["$", "$"]],
+          displayMath: [
+            ["$$", "$$"],
+            ["\\[", "\\]"],
+          ],
+          // 允许用 \$ 表示字面美元符号。
+          processEscapes: true,
+          processEnvironments: true,
+          // 支持 \begin{equation} / align 的自动编号与 \label \ref \eqref 交叉引用。
+          tags: "ams",
+        },
+        options: {
+          // 这一项是关键：保证代码块（<pre>/<code>）里的 $ 永远不会被当成公式，
+          // 例如 PHP 代码中的 $arr、$i。
+          skipHtmlTags: [
+            "script",
+            "noscript",
+            "style",
+            "textarea",
+            "pre",
+            "code",
+            "annotation",
+            "annotation-xml",
+          ],
+        },
+      };
+    </script>
+    <script
+      defer
+      src="https://cdn.jsdelivr.net/npm/mathjax@3.2.2/es5/tex-chtml.js"
+    ></script>
   </head>
   <body>
     <div id="app">正在载入内容…</div>
@@ -126,7 +208,10 @@
         const route = window.location.hash.split("?")[0] || "#/";
         const items = headings.map((heading) => {
           const id = encodeURIComponent(heading.id);
-          const text = escapeHtml(heading.textContent.trim());
+          // 标题里若含公式，目录中只保留文字，去掉 $ 定界符与公式占位符
+          const text = escapeHtml(
+            heading.textContent.replace(/%%MJX\d+%%/g, "").replace(/\$/g, "").trim()
+          );
           const level = heading.tagName.slice(1);
           return `<li class="toc-level-${level}"><a href="${route}?id=${id}">${text}</a></li>`;
         });
@@ -134,6 +219,372 @@
         toc.innerHTML = `<p class="page-toc__title">本页目录</p><ol>${items.join("")}</ol>`;
         toc.hidden = false;
       }
+
+      // ============================================================
+      // 公式：先抽成占位符躲过 Markdown 解析，渲染前还原，最后由 MathJax 排版
+      // ============================================================
+
+      const mathStore = new Map();
+      let mathSeed = 0;
+
+      function storeMath(tex) {
+        const token = `%%MJX${(mathSeed += 1)}%%`;
+        mathStore.set(token, tex);
+        return token;
+      }
+
+      function escapeMath(value) {
+        return value.replace(/[&<>]/g, (character) => ({
+          "&": "&amp;",
+          "<": "&lt;",
+          ">": "&gt;",
+        })[character]);
+      }
+
+      // 单行内：跳过行内代码，只把真正的 $...$ / $$...$$ 换成占位符
+      function protectInlineMath(line) {
+        const isDigit = (character) => character >= "0" && character <= "9";
+        let result = "";
+        let index = 0;
+
+        while (index < line.length) {
+          const character = line[index];
+
+          if (character === "`") {
+            const ticks = /^`+/.exec(line.slice(index))[0];
+            const end = line.indexOf(ticks, index + ticks.length);
+            if (end < 0) {
+              result += line.slice(index);
+              break;
+            }
+            result += line.slice(index, end + ticks.length);
+            index = end + ticks.length;
+            continue;
+          }
+
+          // 反斜杠转义的字符原样跳过
+          if (character === "\\") {
+            result += line.slice(index, index + 2);
+            index += 2;
+            continue;
+          }
+
+          if (character === "$") {
+            if (line[index + 1] === "$") {
+              const closeDisplay = line.indexOf("$$", index + 2);
+              if (closeDisplay > index + 2) {
+                result += storeMath(line.slice(index, closeDisplay + 2));
+                index = closeDisplay + 2;
+                continue;
+              }
+            }
+
+            const close = line.indexOf("$", index + 1);
+            if (close > index + 1) {
+              const body = line.slice(index + 1, close);
+              const after = line[close + 1];
+              // 定界符内侧不贴空白、右定界符后不接数字：
+              // 这样"成本 $100、售价 $200"不会被误判成公式。
+              if (!/\s/.test(body[0]) && !/\s$/.test(body) && !isDigit(after || "")) {
+                result += storeMath(line.slice(index, close + 1));
+                index = close + 1;
+                continue;
+              }
+            }
+          }
+
+          result += character;
+          index += 1;
+        }
+
+        return result;
+      }
+
+      function protectMath(markdown) {
+        const lines = markdown.split(/\r?\n/);
+        const output = [];
+        let fence = null;
+        let inComment = false;
+
+        for (let index = 0; index < lines.length; index += 1) {
+          const line = lines[index];
+          const fenceMarker = /^\s{0,3}(`{3,}|~{3,})/.exec(line);
+
+          // 围栏代码块内一律原样保留（PHP 里的 $arr 靠这里保住）
+          if (fence) {
+            output.push(line);
+            if (fenceMarker && fenceMarker[1][0] === fence) {
+              fence = null;
+            }
+            continue;
+          }
+          if (fenceMarker) {
+            fence = fenceMarker[1][0];
+            output.push(line);
+            continue;
+          }
+
+          // HTML 注释内一律原样保留
+          if (inComment) {
+            output.push(line);
+            if (line.includes("-->")) {
+              inComment = false;
+            }
+            continue;
+          }
+          if (line.trim().startsWith("<!--") && !line.includes("-->")) {
+            inComment = true;
+            output.push(line);
+            continue;
+          }
+
+          const trimmed = line.trim();
+
+          // 块级公式：以 $$ 开头，可能跨多行
+          if (trimmed.startsWith("$$")) {
+            let tex = line.slice(line.indexOf("$$") + 2);
+            let closed = false;
+            let cursor = index;
+            const closeAt = tex.indexOf("$$");
+
+            if (closeAt >= 0) {
+              tex = tex.slice(0, closeAt);
+              closed = true;
+            } else {
+              const parts = [tex];
+              cursor = index + 1;
+              while (cursor < lines.length) {
+                const at = lines[cursor].indexOf("$$");
+                if (at >= 0) {
+                  parts.push(lines[cursor].slice(0, at));
+                  closed = true;
+                  break;
+                }
+                parts.push(lines[cursor]);
+                cursor += 1;
+              }
+              tex = parts.join("\n");
+            }
+
+            if (closed) {
+              // 只有在缺少空行时才补，保证原文已有空行的页面逐字符不变
+              if (output.length && output[output.length - 1].trim() !== "") {
+                output.push("");
+              }
+              output.push(storeMath(`$$${tex}$$`));
+              if (cursor + 1 < lines.length && lines[cursor + 1].trim() !== "") {
+                output.push("");
+              }
+              index = cursor;
+              continue;
+            }
+          }
+
+          output.push(protectInlineMath(line));
+        }
+
+        return output.join("\n");
+      }
+
+      function restoreMath(html) {
+        if (!html || mathStore.size === 0) {
+          return html;
+        }
+        return html.replace(/%%MJX\d+%%/g, (token) =>
+          mathStore.has(token) ? escapeMath(mathStore.get(token)) : token
+        );
+      }
+
+      function typesetMath() {
+        const target = document.querySelector(".markdown-section");
+        const mathJax = window.MathJax;
+        if (!target || !mathJax || !mathJax.startup) {
+          return Promise.resolve();
+        }
+        const run = () =>
+          mathJax.typesetPromise
+            ? mathJax.typesetPromise([target])
+            : Promise.resolve();
+        return (mathJax.startup.promise ? mathJax.startup.promise.then(run) : run())
+          .catch((error) => window.console.error("[mathjax]", error));
+      }
+
+      window.typesetMath = typesetMath;
+      window.addEventListener("load", () => {
+        window.requestAnimationFrame(() => typesetMath());
+      });
+
+      // ============================================================
+      // 注释与参考文献：正文 [^1] → 上标引用；[^1]: 定义 → 原地编号列表
+      // ============================================================
+
+      const FOOTNOTE_DEFINITION = /^\[\^([^\]\s]+)\]:[ \t]*(.*)$/;
+
+      // 标出哪些行属于"可处理的正文"（围栏代码块内、HTML 注释内的行不算）
+      function markPlainLines(lines) {
+        const plain = new Array(lines.length).fill(false);
+        let fence = null;
+        let inComment = false;
+
+        for (let index = 0; index < lines.length; index += 1) {
+          const line = lines[index];
+          const fenceMarker = /^\s{0,3}(`{3,}|~{3,})/.exec(line);
+
+          if (fence) {
+            if (fenceMarker && fenceMarker[1][0] === fence) {
+              fence = null;
+            }
+            continue;
+          }
+          if (fenceMarker) {
+            fence = fenceMarker[1][0];
+            continue;
+          }
+          if (inComment) {
+            if (line.includes("-->")) {
+              inComment = false;
+            }
+            continue;
+          }
+          if (line.trim().startsWith("<!--") && !line.includes("-->")) {
+            inComment = true;
+            continue;
+          }
+          plain[index] = true;
+        }
+
+        return plain;
+      }
+
+      function transformFootnotes(markdown, routeUrl) {
+        const lines = markdown.split(/\r?\n/);
+        const plain = markPlainLines(lines);
+
+        // 第一遍：按定义出现的顺序编号。
+        // 必须两遍扫描：README.md 的引用([^1] 在第 14 行)出现在定义(第 28 行)之前。
+        const numbers = new Map();
+        for (let index = 0; index < lines.length; index += 1) {
+          if (!plain[index]) {
+            continue;
+          }
+          const match = FOOTNOTE_DEFINITION.exec(lines[index]);
+          if (match && !numbers.has(match[1])) {
+            numbers.set(match[1], numbers.size + 1);
+          }
+        }
+
+        // 本页没有脚注：原样返回，完全不动内容
+        if (numbers.size === 0) {
+          return markdown;
+        }
+
+        // 第二遍：正文引用改上标，定义行原地改成编号文献列表
+        const used = new Map();
+        const skip = new Set();
+        const result = [];
+
+        const replaceReferences = (line) =>
+          line
+            .split(/(`+[^`]*`+)/)
+            .map((segment, index) => {
+              if (index % 2 === 1) {
+                return segment;
+              }
+              return segment.replace(
+                /\[\^([^\]\s]+)\](?!:)/g,
+                (whole, label) => {
+                  if (!numbers.has(label)) {
+                    return whole;
+                  }
+                  const number = numbers.get(label);
+                  const count = (used.get(label) || 0) + 1;
+                  used.set(label, count);
+                  // 同一个标签被引用多次时，只有第一处挂 id，避免重复 id
+                  const id = count === 1 ? ` id="fn-ref-${number}"` : "";
+                  return (
+                    `<sup class="fn-ref"><a${id} data-fn="fn-${number}"` +
+                    ` href="${routeUrl}?id=fn-${number}">[${number}]</a></sup>`
+                  );
+                }
+              );
+            })
+            .join("");
+
+        for (let index = 0; index < lines.length; index += 1) {
+          if (skip.has(index)) {
+            continue;
+          }
+          if (!plain[index]) {
+            result.push(lines[index]);
+            continue;
+          }
+
+          const match = FOOTNOTE_DEFINITION.exec(lines[index]);
+
+          if (!match) {
+            result.push(replaceReferences(lines[index]));
+            continue;
+          }
+
+          // 收集一组连续的定义行（中间允许空行），合并成一个有序列表
+          const group = [];
+          let cursor = index;
+          let last = index;
+          while (cursor < lines.length) {
+            if (lines[cursor].trim() === "") {
+              cursor += 1;
+              continue;
+            }
+            if (!plain[cursor]) {
+              break;
+            }
+            const item = FOOTNOTE_DEFINITION.exec(lines[cursor]);
+            if (!item) {
+              break;
+            }
+            group.push({ label: item[1], body: item[2].trim() });
+            last = cursor;
+            cursor += 1;
+          }
+          for (let position = index; position <= last; position += 1) {
+            skip.add(position);
+          }
+
+          // 列表块前后各留一个空行，避免被相邻段落吞并
+          if (result.length && result[result.length - 1].trim() !== "") {
+            result.push("");
+          }
+          group.forEach((item) => {
+            const number = numbers.get(item.label);
+            const back =
+              `<a class="fn-back" data-fn="fn-ref-${number}"` +
+              ` href="${routeUrl}?id=fn-ref-${number}" title="返回正文">↩</a>`;
+            result.push(
+              `${number}. <a class="fn-anchor" id="fn-${number}"></a>${item.body} ${back}`
+            );
+          });
+          result.push("");
+        }
+
+        return result.join("\n");
+      }
+
+      // 自己处理脚注跳转：docsify 用的是 hash 路由，裸 href="#fn-1" 会被当成
+      // 路由去加载 fn-1.md 而跳到 404，所以这里必须 preventDefault 自己滚。
+      document.addEventListener("click", (event) => {
+        const target = event.target;
+        const link =
+          target && target.closest ? target.closest("a[data-fn]") : null;
+        if (!link) {
+          return;
+        }
+        const anchor = document.getElementById(link.getAttribute("data-fn"));
+        if (!anchor) {
+          return;
+        }
+        event.preventDefault();
+        anchor.scrollIntoView({ behavior: "smooth", block: "center" });
+      });
 
       window.$docsify = {
         name: "中国宏观经济观察与随笔",
@@ -144,6 +595,25 @@
         relativePath: true,
         notFoundPage: true,
         plugins: [
+          // 1) 注释与参考文献
+          (hook, vm) => {
+            hook.beforeEach((markdown) => {
+              const route =
+                (vm && vm.route && vm.route.path && `#${vm.route.path}`) ||
+                window.location.hash.split("?")[0] ||
+                "#/";
+              return transformFootnotes(markdown, route);
+            });
+          },
+          // 2) 公式：抽占位符 → 还原 → 排版
+          (hook) => {
+            hook.beforeEach((markdown) => protectMath(markdown));
+            hook.afterEach((html) => restoreMath(html));
+            hook.doneEach(() => {
+              typesetMath();
+            });
+          },
+          // 3) 右侧本页目录
           (hook) => {
             hook.afterEach((html, next) => {
               next(html);
